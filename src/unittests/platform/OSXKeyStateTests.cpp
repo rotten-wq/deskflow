@@ -113,6 +113,21 @@ void OSXKeyStateTests::fakePollCharWithModifier()
   keyState.fakeKeyUp(2);
 }
 
+void OSXKeyStateTests::hangulKeyMapsToF19()
+{
+  deskflow::KeyMap keyMap;
+  EventQueue eventQueue;
+  OSXKeyState keyState(&eventQueue, keyMap, {"en"}, true);
+  keyState.updateKeyMap();
+
+  // only inspect the key map; posting F19 would switch the input source
+  const auto *hangul = keyMap.findCompatibleKey(kKeyHangul, 0, 0, 0);
+  const auto *f19 = keyMap.findCompatibleKey(kKeyF19, 0, 0, 0);
+  QVERIFY(hangul != nullptr && !hangul->empty());
+  QVERIFY(f19 != nullptr && !f19->empty());
+  QCOMPARE(hangul->front().m_button, f19->front().m_button);
+}
+
 bool OSXKeyStateTests::isKeyPressed(const OSXKeyState &keyState, KeyButton button)
 {
   // HACK: allow os to realize key state changes.

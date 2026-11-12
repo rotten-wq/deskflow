@@ -127,6 +127,13 @@ static const KeyEntry s_controlKeys[] = {
     {kKeyHenkan, kVK_JIS_Kana},
     {kKeyZenkaku, kVK_JIS_Eisu},
 
+    // A Windows server with the Korean IME sends the Han/Eng key (right Alt on
+    // Korean keyboards) as kKeyHangul. macOS has no dedicated key for it, so
+    // without a mapping the key is dropped. Send F19 instead, which can be bound
+    // to "Select the previous input source" in System Settings > Keyboard >
+    // Keyboard Shortcuts > Input Sources to toggle Korean/English.
+    {kKeyHangul, kVK_F19},
+
     {kKeyMissionControl, s_missionControlVK},
     {kKeyLaunchpad, s_launchpadVK},
     {kKeyBrightnessUp, s_brightnessUp},

@@ -20,6 +20,7 @@ private Q_SLOTS:
   void fakePollShift();
   void fakePollChar();
   void fakePollCharWithModifier();
+  void hangulKeyMapsToF19();
 
 private:
   bool isKeyPressed(const OSXKeyState &keyState, KeyButton button);
