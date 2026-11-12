@@ -31,6 +31,7 @@
 #include <Shlobj.h>
 #include <algorithm>
 #include <comutil.h>
+#include <cstdlib>
 #include <string.h>
 
 // suppress warning about GetVersionEx, which is used indirectly in this
@@ -1254,15 +1255,10 @@ bool MSWindowsComputer::onMouseMove(int32_t mx, int32_t my)
     LOG_VERBOSE("centering cursor on motion: %+d,%+d", m_xCenter, m_yCenter);
     warpCursorNoFlush(m_xCenter, m_yCenter);
 
-    // examine the motion.  if it's about the distance
-    // from the center of the computer to an edge then
-    // it's probably a bogus motion that we want to
-    // ignore (see warpCursorNoFlush() for a further
-    // description).
-    static int32_t bogusZoneSize = 10;
-    if (-x + bogusZoneSize > m_xCenter - m_x || x + bogusZoneSize > m_x + m_w - m_xCenter ||
-        -y + bogusZoneSize > m_yCenter - m_y || y + bogusZoneSize > m_y + m_h - m_yCenter) {
-
+    // the cursor is parked at the center of the primary monitor, so a delta of more than
+    // half the distance to its edge is a stale event from before the warp; ignore it
+    constexpr int32_t kBogusMotionDivisor = 2;
+    if (std::abs(x) > m_xCenter / kBogusMotionDivisor || std::abs(y) > m_yCenter / kBogusMotionDivisor) {
       LOG_DEBUG("dropped bogus delta motion: %+d,%+d", x, y);
     } else {
       // send motion
