@@ -12,4 +12,7 @@ class ServerTests : public QObject
 private Q_SLOTS:
   void SwitchToComputerInfo_alloc_computer();
   void KeyboardBroadcastInfo_alloc_stateAndComputers();
+  void mapHomeEndToLineNavigation_homeAndEnd();
+  void mapHomeEndToLineNavigation_keepsShift();
+  void mapHomeEndToLineNavigation_ignoresShortcutsAndOtherKeys();
 };

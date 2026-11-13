@@ -24,4 +24,43 @@ void ServerTests::KeyboardBroadcastInfo_alloc_stateAndComputers()
   delete info;
 }
 
+void ServerTests::mapHomeEndToLineNavigation_homeAndEnd()
+{
+  KeyID id = kKeyHome;
+  KeyModifierMask mask = 0;
+  QVERIFY(Server::mapHomeEndToLineNavigation(id, mask));
+  QCOMPARE(id, kKeyLeft);
+  QCOMPARE(mask, KeyModifierSuper);
+
+  id = kKeyEnd;
+  mask = 0;
+  QVERIFY(Server::mapHomeEndToLineNavigation(id, mask));
+  QCOMPARE(id, kKeyRight);
+  QCOMPARE(mask, KeyModifierSuper);
+}
+
+void ServerTests::mapHomeEndToLineNavigation_keepsShift()
+{
+  KeyID id = kKeyHome;
+  KeyModifierMask mask = KeyModifierShift;
+  QVERIFY(Server::mapHomeEndToLineNavigation(id, mask));
+  QCOMPARE(id, kKeyLeft);
+  QCOMPARE(mask, KeyModifierShift | KeyModifierSuper);
+}
+
+void ServerTests::mapHomeEndToLineNavigation_ignoresShortcutsAndOtherKeys()
+{
+  KeyID id = kKeyHome;
+  KeyModifierMask mask = KeyModifierControl;
+  QVERIFY(!Server::mapHomeEndToLineNavigation(id, mask));
+  QCOMPARE(id, kKeyHome);
+  QCOMPARE(mask, KeyModifierControl);
+
+  id = kKeyPageUp;
+  mask = 0;
+  QVERIFY(!Server::mapHomeEndToLineNavigation(id, mask));
+  QCOMPARE(id, kKeyPageUp);
+  QCOMPARE(mask, 0u);
+}
+
 QTEST_MAIN(ServerTests)

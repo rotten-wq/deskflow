@@ -200,9 +200,20 @@ public:
   void sendConnectedClientsIpc() const;
   size_t getMaximumClipboardSizeBytes() const;
 
+  //! Map Home/End to line navigation
+  /*!
+  Rewrites Home and End, alone or with Shift, to Super+Left and Super+Right,
+  which move to the start and end of the line on macOS.  Other keys and
+  shortcuts are left untouched.  Returns true if the key was rewritten.
+  */
+  static bool mapHomeEndToLineNavigation(KeyID &id, KeyModifierMask &mask);
+
   //@}
 
 private:
+  // rewrite a key for the active client if its computer options ask for it
+  void remapKeyForActive(KeyID &id, KeyModifierMask &mask) const;
+
   // get canonical name of client
   std::string getName(const BaseClientProxy *) const;
 

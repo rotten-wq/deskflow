@@ -131,6 +131,7 @@ public:
     inline static const auto HalfDuplexCapsLock = QStringLiteral("computer_%1/halfDuplexCapsLock");
     inline static const auto HalfDuplexNumLock = QStringLiteral("computer_%1/halfDuplexNumLock");
     inline static const auto HalfDuplexScrollLock = QStringLiteral("computer_%1/halfDuplexScrollLock");
+    inline static const auto HomeEndLineNavigation = QStringLiteral("computer_%1/homeEndLineNavigation");
     inline static const auto ModifierAlt = QStringLiteral("computer_%1/modifierAlt");
     inline static const auto ModifierAltGr = QStringLiteral("computer_%1/modifierAltGr");
     inline static const auto ModifierCtrl = QStringLiteral("computer_%1/modifierCtrl");

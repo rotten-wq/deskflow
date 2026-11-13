@@ -1532,6 +1532,40 @@ void Server::onScreensaver(bool activated)
   }
 }
 
+bool Server::mapHomeEndToLineNavigation(KeyID &id, KeyModifierMask &mask)
+{
+  if (id != kKeyHome && id != kKeyEnd) {
+    return false;
+  }
+
+  // leave shortcuts such as Ctrl+Home untouched
+  const KeyModifierMask commandModifiers =
+      KeyModifierControl | KeyModifierAlt | KeyModifierAltGr | KeyModifierMeta | KeyModifierSuper;
+  if ((mask & commandModifiers) != 0) {
+    return false;
+  }
+
+  id = (id == kKeyHome) ? kKeyLeft : kKeyRight;
+  mask |= KeyModifierSuper;
+  return true;
+}
+
+void Server::remapKeyForActive(KeyID &id, KeyModifierMask &mask) const
+{
+  if (m_active == m_primaryClient) {
+    return;
+  }
+
+  const Config::ScreenOptions *options = m_config->getOptions(getName(m_active));
+  if (options == nullptr || !options->contains(kOptionHomeEndLineNavigation)) {
+    return;
+  }
+
+  if (mapHomeEndToLineNavigation(id, mask)) {
+    LOG_VERBOSE("mapped Home/End to line navigation for \"%s\"", getName(m_active).c_str());
+  }
+}
+
 void Server::onKeyDown(KeyID id, KeyModifierMask mask, KeyButton button, const std::string &lang, const char *computers)
 {
   LOG_VERBOSE("onKeyDown id=%d mask=0x%04x button=0x%04x lang=%s", id, mask, button, lang.c_str());
@@ -1539,6 +1573,7 @@ void Server::onKeyDown(KeyID id, KeyModifierMask mask, KeyButton button, const s
 
   // relay
   if (!m_keyboardBroadcasting && IKeyState::KeyInfo::isDefault(computers)) {
+    remapKeyForActive(id, mask);
     m_active->keyDown(id, mask, button, lang);
   } else {
     if (!computers && m_keyboardBroadcasting) {
@@ -1562,6 +1597,7 @@ void Server::onKeyUp(KeyID id, KeyModifierMask mask, KeyButton button, const cha
 
   // relay
   if (!m_keyboardBroadcasting && IKeyState::KeyInfo::isDefault(computers)) {
+    remapKeyForActive(id, mask);
     m_active->keyUp(id, mask, button);
   } else {
     if (!computers && m_keyboardBroadcasting) {
@@ -1587,6 +1623,7 @@ void Server::onKeyRepeat(KeyID id, KeyModifierMask mask, int32_t count, KeyButto
   assert(m_active != nullptr);
 
   // relay
+  remapKeyForActive(id, mask);
   m_active->keyRepeat(id, mask, count, button, lang);
 }
 
