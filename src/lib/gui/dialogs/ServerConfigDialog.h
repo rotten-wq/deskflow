@@ -17,7 +17,7 @@
 
 class SettingsDialogButtonBox;
 class QItemSelection;
-class QListWidgetItem;
+class QTableWidgetItem;
 
 namespace Ui {
 class ServerConfigDialog;
@@ -100,12 +100,14 @@ private:
   bool isGeneralConfigDefault() const;
   void setButtonBoxEnabledButtons() const;
 
-  // computers that get Home/End sent as line start/end
-  QStringList lineNavigationComputers() const;
-  void loadLineNavigation();
-  void refreshLineNavigation();
-  void lineNavigationItemChanged(QListWidgetItem *item);
-  bool isLineNavigationModified() const;
+  // per-client keyboard options: Home/End line navigation and Ctrl/Super swap
+  QStringList clientKeyComputers() const;
+  void loadClientKeys();
+  void refreshClientKeys();
+  void clientKeysItemChanged(QTableWidgetItem *item);
+  bool isClientKeysModified() const;
+  bool isClientKeysDefault() const;
+  static bool isCtrlSuperSwapped(const QString &computer);
 
   std::unique_ptr<Ui::ServerConfigDialog> ui;
   QString m_message = "";
@@ -128,6 +130,7 @@ private:
   bool m_defaultLockToComputerState;
   QString m_originalServerConfigUsesExternalFile;
   QMap<QString, bool> m_lineNavigation;
+  QMap<QString, bool> m_swapCtrlSuper;
   ServerConfig m_serverConfig;
   ComputerSetupModel m_computerSetupModel;
   SettingsDialogButtonBox *m_buttonBox = nullptr;

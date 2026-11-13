@@ -202,11 +202,20 @@ public:
 
   //! Map Home/End to line navigation
   /*!
-  Rewrites Home and End, alone or with Shift, to Super+Left and Super+Right,
-  which move to the start and end of the line on macOS.  Other keys and
-  shortcuts are left untouched.  Returns true if the key was rewritten.
+  Rewrites Home and End, alone or with Shift, to Left and Right with
+  \p commandMask added, which is Super (Command on macOS) unless the client
+  remaps modifiers.  Other keys and shortcuts are left untouched.  Returns
+  true if the key was rewritten.
   */
-  static bool mapHomeEndToLineNavigation(KeyID &id, KeyModifierMask &mask);
+  static bool
+  mapHomeEndToLineNavigation(KeyID &id, KeyModifierMask &mask, KeyModifierMask commandMask = KeyModifierSuper);
+
+  //! Get the server modifier a client turns into Super
+  /*!
+  Uses the client's modifier map options.  Returns 0 if no server modifier
+  becomes Super on the client.
+  */
+  static KeyModifierMask serverMaskForClientSuper(const ServerConfig::ScreenOptions &options);
 
   //@}
 

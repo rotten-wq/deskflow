@@ -1097,6 +1097,22 @@ Al habilitar esta opción, se deshabilitará la interfaz gráfica de usuario (GU
         <translation type="unfinished">Busque un archivo de configuración</translation>
     </message>
     <message>
+        <source>Computer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Home/End to line start/end</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swap Ctrl and Win/Command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The server&apos;s Ctrl key acts as Command (Super) on this computer, and the Windows key acts as Ctrl.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Enable lock to computer at startup</source>
         <translation type="unfinished">Activar el bloqueo del ordenador al iniciar</translation>
     </message>
@@ -1105,7 +1121,7 @@ Al habilitar esta opción, se deshabilitará la interfaz gráfica de usuario (GU
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Send Home/End as line start/end (Command+Left/Right)</source>
+        <source>Client keyboard</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -15,4 +15,8 @@ private Q_SLOTS:
   void mapHomeEndToLineNavigation_homeAndEnd();
   void mapHomeEndToLineNavigation_keepsShift();
   void mapHomeEndToLineNavigation_ignoresShortcutsAndOtherKeys();
+  void mapHomeEndToLineNavigation_customCommandMask();
+  void serverMaskForClientSuper_default();
+  void serverMaskForClientSuper_swappedCtrlAndSuper();
+  void serverMaskForClientSuper_noModifierBecomesSuper();
 };

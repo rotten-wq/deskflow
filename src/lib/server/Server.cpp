@@ -10,6 +10,7 @@
 
 #include "base/IEventQueue.h"
 #include "base/Log.h"
+#include "common/KeyModifierID.h"
 #include "deskflow/AppUtil.h"
 #include "deskflow/Computer.h"
 #include "deskflow/DeskflowException.h"
@@ -33,6 +34,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <utility>
 
 using namespace deskflow::server;
 
@@ -1532,7 +1534,7 @@ void Server::onScreensaver(bool activated)
   }
 }
 
-bool Server::mapHomeEndToLineNavigation(KeyID &id, KeyModifierMask &mask)
+bool Server::mapHomeEndToLineNavigation(KeyID &id, KeyModifierMask &mask, KeyModifierMask commandMask)
 {
   if (id != kKeyHome && id != kKeyEnd) {
     return false;
@@ -1546,8 +1548,25 @@ bool Server::mapHomeEndToLineNavigation(KeyID &id, KeyModifierMask &mask)
   }
 
   id = (id == kKeyHome) ? kKeyLeft : kKeyRight;
-  mask |= KeyModifierSuper;
+  mask |= commandMask;
   return true;
+}
+
+KeyModifierMask Server::serverMaskForClientSuper(const Config::ScreenOptions &options)
+{
+  // the client remaps the server's modifiers, so find the one it turns into Super
+  static const std::pair<OptionID, KeyModifierMask> s_modifierMaps[] = {
+      {kOptionModifierMapForShift, KeyModifierShift}, {kOptionModifierMapForControl, KeyModifierControl},
+      {kOptionModifierMapForAlt, KeyModifierAlt},     {kOptionModifierMapForAltGr, KeyModifierAltGr},
+      {kOptionModifierMapForMeta, KeyModifierMeta},   {kOptionModifierMapForSuper, KeyModifierSuper},
+  };
+  for (const auto &[option, serverMask] : s_modifierMaps) {
+    const auto it = options.find(option);
+    if (it != options.end() && static_cast<KeyModifierID>(it->second) == kKeyModifierIDSuper) {
+      return serverMask;
+    }
+  }
+  return options.contains(kOptionModifierMapForSuper) ? 0 : KeyModifierSuper;
 }
 
 void Server::remapKeyForActive(KeyID &id, KeyModifierMask &mask) const
@@ -1561,7 +1580,12 @@ void Server::remapKeyForActive(KeyID &id, KeyModifierMask &mask) const
     return;
   }
 
-  if (mapHomeEndToLineNavigation(id, mask)) {
+  const KeyModifierMask commandMask = serverMaskForClientSuper(*options);
+  if (commandMask == 0) {
+    return;
+  }
+
+  if (mapHomeEndToLineNavigation(id, mask, commandMask)) {
     LOG_VERBOSE("mapped Home/End to line navigation for \"%s\"", getName(m_active).c_str());
   }
 }

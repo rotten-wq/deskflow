@@ -878,21 +878,24 @@ Enabling this setting will disable the server config GUI.</string>
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupLineNavigation">
-         <property name="toolTip">
-          <string>For macOS clients: Home and End, alone or with Shift, are sent as Command+Left and Command+Right, which move to the start and end of the line.</string>
-         </property>
+        <widget class="QGroupBox" name="groupClientKeys">
          <property name="title">
-          <string>Send Home/End as line start/end (Command+Left/Right)</string>
+          <string>Client keyboard</string>
          </property>
-         <layout class="QVBoxLayout" name="layoutLineNavigation">
+         <layout class="QVBoxLayout" name="layoutClientKeys">
           <item>
-           <widget class="QListWidget" name="listLineNavigation">
+           <widget class="QTableWidget" name="tableClientKeys">
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>80</height>
+              <height>100</height>
              </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
             </property>
            </widget>
           </item>

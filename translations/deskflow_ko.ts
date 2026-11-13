@@ -1097,6 +1097,22 @@ Enabling this setting will disable the server config GUI.</source>
         <translation>설정 파일 찾아보기</translation>
     </message>
     <message>
+        <source>Computer</source>
+        <translation>컴퓨터</translation>
+    </message>
+    <message>
+        <source>Home/End to line start/end</source>
+        <translation>Home/End를 줄 처음/끝으로</translation>
+    </message>
+    <message>
+        <source>Swap Ctrl and Win/Command</source>
+        <translation>Ctrl과 Win/Command 바꾸기</translation>
+    </message>
+    <message>
+        <source>The server&apos;s Ctrl key acts as Command (Super) on this computer, and the Windows key acts as Ctrl.</source>
+        <translation>서버의 Ctrl 키가 이 컴퓨터에서 Command(Super)로, Windows 키가 Ctrl로 동작합니다.</translation>
+    </message>
+    <message>
         <source>Enable lock to computer at startup</source>
         <translation>시작 시 컴퓨터 잠금 사용</translation>
     </message>
@@ -1105,8 +1121,8 @@ Enabling this setting will disable the server config GUI.</source>
         <translation>macOS 클라이언트용: Home과 End(Shift 조합 포함)를 Command+← / Command+→로 보내 줄의 처음과 끝으로 이동합니다.</translation>
     </message>
     <message>
-        <source>Send Home/End as line start/end (Command+Left/Right)</source>
-        <translation>Home/End를 줄 처음/끝으로 보내기 (Command+←/→)</translation>
+        <source>Client keyboard</source>
+        <translation>클라이언트 키보드</translation>
     </message>
 </context>
 <context>

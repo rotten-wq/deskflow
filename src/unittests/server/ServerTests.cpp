@@ -7,6 +7,8 @@
 
 #include "ServerTests.h"
 
+#include "common/KeyModifierID.h"
+#include "deskflow/OptionTypes.h"
 #include "server/Server.h"
 
 void ServerTests::SwitchToComputerInfo_alloc_computer()
@@ -61,6 +63,40 @@ void ServerTests::mapHomeEndToLineNavigation_ignoresShortcutsAndOtherKeys()
   QVERIFY(!Server::mapHomeEndToLineNavigation(id, mask));
   QCOMPARE(id, kKeyPageUp);
   QCOMPARE(mask, 0u);
+}
+
+void ServerTests::mapHomeEndToLineNavigation_customCommandMask()
+{
+  KeyID id = kKeyEnd;
+  KeyModifierMask mask = KeyModifierShift;
+  QVERIFY(Server::mapHomeEndToLineNavigation(id, mask, KeyModifierControl));
+  QCOMPARE(id, kKeyRight);
+  QCOMPARE(mask, KeyModifierShift | KeyModifierControl);
+}
+
+void ServerTests::serverMaskForClientSuper_default()
+{
+  deskflow::server::Config::ScreenOptions options;
+  QCOMPARE(Server::serverMaskForClientSuper(options), KeyModifierSuper);
+
+  options[kOptionModifierMapForControl] = kKeyModifierIDControl;
+  options[kOptionModifierMapForSuper] = kKeyModifierIDSuper;
+  QCOMPARE(Server::serverMaskForClientSuper(options), KeyModifierSuper);
+}
+
+void ServerTests::serverMaskForClientSuper_swappedCtrlAndSuper()
+{
+  deskflow::server::Config::ScreenOptions options;
+  options[kOptionModifierMapForControl] = kKeyModifierIDSuper;
+  options[kOptionModifierMapForSuper] = kKeyModifierIDControl;
+  QCOMPARE(Server::serverMaskForClientSuper(options), KeyModifierControl);
+}
+
+void ServerTests::serverMaskForClientSuper_noModifierBecomesSuper()
+{
+  deskflow::server::Config::ScreenOptions options;
+  options[kOptionModifierMapForSuper] = kKeyModifierIDControl;
+  QCOMPARE(Server::serverMaskForClientSuper(options), 0u);
 }
 
 QTEST_MAIN(ServerTests)

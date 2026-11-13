@@ -10,6 +10,7 @@
 #include "ui_ServerConfigDialog.h"
 
 #include "common/Constants.h"
+#include "common/KeyboardModifier.h"
 #include "common/NetworkProtocol.h"
 #include "common/PlatformInfo.h"
 #include "common/Settings.h"
@@ -19,9 +20,10 @@
 #include "gui/widgets/SettingsDialogButtonBox.h"
 
 #include <QFileDialog>
-#include <QListWidget>
+#include <QHeaderView>
 #include <QMessageBox>
 #include <QSignalBlocker>
+#include <QTableWidget>
 
 using enum ComputerConfig::SwitchCorner;
 
@@ -117,6 +119,17 @@ void ServerConfigDialog::save()
 
   for (auto it = m_lineNavigation.cbegin(); it != m_lineNavigation.cend(); ++it)
     Settings::setValue(Settings::Computer::HomeEndLineNavigation.arg(it.key()), it.value());
+  for (auto it = m_swapCtrlSuper.cbegin(); it != m_swapCtrlSuper.cend(); ++it) {
+    // only touch the modifier map when the swap changed, to keep other custom maps
+    if (it.value() == isCtrlSuperSwapped(it.key()))
+      continue;
+    Settings::setValue(
+        Settings::Computer::ModifierCtrl.arg(it.key()), it.value() ? kModifierNameSuper : kModifierNameCtrl
+    );
+    Settings::setValue(
+        Settings::Computer::ModifierSuper.arg(it.key()), it.value() ? kModifierNameCtrl : kModifierNameSuper
+    );
+  }
   // Write the computer list now too, or it keeps computers whose settings were just removed until the app quits.
   m_serverConfig.commit();
   Settings::removeUnknownComputers(computerNames);
@@ -438,11 +451,11 @@ void ServerConfigDialog::loadFromConfig()
   } else {
     server->markAsServer();
   }
-  loadLineNavigation();
+  loadClientKeys();
   updateControls();
 }
 
-QStringList ServerConfigDialog::lineNavigationComputers() const
+QStringList ServerConfigDialog::clientKeyComputers() const
 {
   QStringList names = Settings::knownComputers();
   for (const auto &computer : m_computerSetupModel.m_computers) {
@@ -455,38 +468,99 @@ QStringList ServerConfigDialog::lineNavigationComputers() const
   return names;
 }
 
-void ServerConfigDialog::loadLineNavigation()
+bool ServerConfigDialog::isCtrlSuperSwapped(const QString &computer)
+{
+  const auto ctrl = Settings::value(Settings::Computer::ModifierCtrl.arg(computer)).toString();
+  const auto super = Settings::value(Settings::Computer::ModifierSuper.arg(computer)).toString();
+  return ctrl.compare(kModifierNameSuper, Qt::CaseInsensitive) == 0 &&
+         super.compare(kModifierNameCtrl, Qt::CaseInsensitive) == 0;
+}
+
+void ServerConfigDialog::loadClientKeys()
 {
   m_lineNavigation.clear();
-  for (const auto &name : lineNavigationComputers())
+  m_swapCtrlSuper.clear();
+  for (const auto &name : clientKeyComputers()) {
     m_lineNavigation.insert(name, Settings::value(Settings::Computer::HomeEndLineNavigation.arg(name)).toBool());
-  refreshLineNavigation();
-}
-
-void ServerConfigDialog::refreshLineNavigation()
-{
-  const QSignalBlocker blocker(ui->listLineNavigation);
-  ui->listLineNavigation->clear();
-  for (auto it = m_lineNavigation.cbegin(); it != m_lineNavigation.cend(); ++it) {
-    auto *item = new QListWidgetItem(it.key(), ui->listLineNavigation);
-    item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-    item->setCheckState(it.value() ? Qt::Checked : Qt::Unchecked);
+    m_swapCtrlSuper.insert(name, isCtrlSuperSwapped(name));
   }
+  refreshClientKeys();
 }
 
-void ServerConfigDialog::lineNavigationItemChanged(QListWidgetItem *item)
+void ServerConfigDialog::refreshClientKeys()
 {
-  m_lineNavigation.insert(item->text(), item->checkState() == Qt::Checked);
+  enum Column
+  {
+    Name,
+    LineNavigation,
+    SwapCtrlSuper
+  };
+
+  const QSignalBlocker blocker(ui->tableClientKeys);
+  auto *table = ui->tableClientKeys;
+  table->clear();
+  table->setColumnCount(3);
+  table->setHorizontalHeaderLabels(
+      {tr("Computer"), tr("Home/End to line start/end"), tr("Swap Ctrl and Win/Command")}
+  );
+  table->horizontalHeaderItem(LineNavigation)
+      ->setToolTip(tr("For macOS clients: Home and End, alone or with Shift, are sent as Command+Left and "
+                      "Command+Right, which move to the start and end of the line."));
+  table->horizontalHeaderItem(SwapCtrlSuper)
+      ->setToolTip(tr("The server's Ctrl key acts as Command (Super) on this computer, and the Windows key acts as "
+                      "Ctrl."));
+  table->verticalHeader()->setVisible(false);
+  table->setRowCount(static_cast<int>(m_lineNavigation.size()));
+
+  int row = 0;
+  for (auto it = m_lineNavigation.cbegin(); it != m_lineNavigation.cend(); ++it, ++row) {
+    auto *name = new QTableWidgetItem(it.key());
+    name->setFlags(Qt::ItemIsEnabled);
+    table->setItem(row, Name, name);
+
+    auto *lineNavigation = new QTableWidgetItem();
+    lineNavigation->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+    lineNavigation->setCheckState(it.value() ? Qt::Checked : Qt::Unchecked);
+    lineNavigation->setData(Qt::UserRole, it.key());
+    table->setItem(row, LineNavigation, lineNavigation);
+
+    auto *swap = new QTableWidgetItem();
+    swap->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+    swap->setCheckState(m_swapCtrlSuper.value(it.key()) ? Qt::Checked : Qt::Unchecked);
+    swap->setData(Qt::UserRole, it.key());
+    table->setItem(row, SwapCtrlSuper, swap);
+  }
+  table->resizeColumnsToContents();
+  table->horizontalHeader()->setStretchLastSection(true);
+}
+
+void ServerConfigDialog::clientKeysItemChanged(QTableWidgetItem *item)
+{
+  const auto name = item->data(Qt::UserRole).toString();
+  const bool checked = item->checkState() == Qt::Checked;
+  if (item->column() == 1)
+    m_lineNavigation.insert(name, checked);
+  else if (item->column() == 2)
+    m_swapCtrlSuper.insert(name, checked);
   setButtonBoxEnabledButtons();
 }
 
-bool ServerConfigDialog::isLineNavigationModified() const
+bool ServerConfigDialog::isClientKeysModified() const
 {
   for (auto it = m_lineNavigation.cbegin(); it != m_lineNavigation.cend(); ++it) {
     if (it.value() != Settings::value(Settings::Computer::HomeEndLineNavigation.arg(it.key())).toBool())
       return true;
   }
+  for (auto it = m_swapCtrlSuper.cbegin(); it != m_swapCtrlSuper.cend(); ++it) {
+    if (it.value() != isCtrlSuperSwapped(it.key()))
+      return true;
+  }
   return false;
+}
+
+bool ServerConfigDialog::isClientKeysDefault() const
+{
+  return !m_lineNavigation.values().contains(true) && !m_swapCtrlSuper.values().contains(true);
 }
 
 void ServerConfigDialog::resetFromSettings()
@@ -567,7 +641,7 @@ void ServerConfigDialog::initConnections() const
   connect(ui->btnBrowseConfigFile, &QPushButton::clicked, this, &ServerConfigDialog::browseConfigFile);
   connect(ui->groupExternalConfig, &QGroupBox::toggled, this, &ServerConfigDialog::toggleExternalConfig);
   connect(ui->lineConfigFile, &QLineEdit::textChanged, this, &ServerConfigDialog::setServerConfig);
-  connect(ui->listLineNavigation, &QListWidget::itemChanged, this, &ServerConfigDialog::lineNavigationItemChanged);
+  connect(ui->tableClientKeys, &QTableWidget::itemChanged, this, &ServerConfigDialog::clientKeysItemChanged);
 
   connect(
       ui->sbClipboardSizeLimit, QOverload<int>::of(&QSpinBox::valueChanged), this,
@@ -625,7 +699,9 @@ void ServerConfigDialog::restoreFromDefaults()
 
   for (auto it = m_lineNavigation.begin(); it != m_lineNavigation.end(); ++it)
     it.value() = false;
-  refreshLineNavigation();
+  for (auto it = m_swapCtrlSuper.begin(); it != m_swapCtrlSuper.end(); ++it)
+    it.value() = false;
+  refreshClientKeys();
 
   refreshControls();
   updateControls();
@@ -674,7 +750,7 @@ bool ServerConfigDialog::isGeneralConfigModified() const
          m_win32keepForeground != Settings::value(Settings::Server::Win32KeepForeground).toBool() ||
          m_disableLockToComputer != Settings::value(Settings::Server::DisableLockToComputer).toBool() ||
          m_defaultLockToComputerState != Settings::value(Settings::Server::DefaultLockToComputerState).toBool() ||
-         isLineNavigationModified();
+         isClientKeysModified();
 }
 
 bool ServerConfigDialog::isGeneralConfigDefault() const
@@ -694,7 +770,7 @@ bool ServerConfigDialog::isGeneralConfigDefault() const
          m_win32keepForeground == Settings::defaultValue(Settings::Server::Win32KeepForeground).toBool() &&
          m_disableLockToComputer == Settings::defaultValue(Settings::Server::DisableLockToComputer).toBool() &&
          m_defaultLockToComputerState == Settings::defaultValue(Settings::Server::DefaultLockToComputerState).toBool() &&
-         !m_lineNavigation.values().contains(true);
+         isClientKeysDefault();
 }
 
 void ServerConfigDialog::setButtonBoxEnabledButtons() const
