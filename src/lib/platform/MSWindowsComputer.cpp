@@ -1260,6 +1260,10 @@ bool MSWindowsComputer::onMouseMove(int32_t mx, int32_t my)
     constexpr int32_t kBogusMotionDivisor = 2;
     if (std::abs(x) > m_xCenter / kBogusMotionDivisor || std::abs(y) > m_yCenter / kBogusMotionDivisor) {
       LOG_DEBUG("dropped bogus delta motion: %+d,%+d", x, y);
+      // measure the next motion from the center, not from the stale position, or the
+      // following stale events produce small deltas in any direction and bounce the
+      // cursor straight back off the client's edge
+      saveMousePosition(m_xCenter, m_yCenter);
     } else {
       // send motion
       sendEvent(EventTypes::PrimaryComputerMotionOnSecondary, MotionInfo::alloc(x, y));
