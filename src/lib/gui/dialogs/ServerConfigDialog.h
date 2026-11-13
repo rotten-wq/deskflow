@@ -13,9 +13,11 @@
 #include "config/ServerConfig.h"
 
 #include <QDialog>
+#include <QMap>
 
 class SettingsDialogButtonBox;
 class QItemSelection;
+class QListWidgetItem;
 
 namespace Ui {
 class ServerConfigDialog;
@@ -97,6 +99,14 @@ private:
   bool isGeneralConfigModified() const;
   bool isGeneralConfigDefault() const;
   void setButtonBoxEnabledButtons() const;
+
+  // computers that get Home/End sent as line start/end
+  QStringList lineNavigationComputers() const;
+  void loadLineNavigation();
+  void refreshLineNavigation();
+  void lineNavigationItemChanged(QListWidgetItem *item);
+  bool isLineNavigationModified() const;
+
   std::unique_ptr<Ui::ServerConfigDialog> ui;
   QString m_message = "";
   int m_columns;
@@ -117,6 +127,7 @@ private:
   bool m_disableLockToComputer;
   bool m_defaultLockToComputerState;
   QString m_originalServerConfigUsesExternalFile;
+  QMap<QString, bool> m_lineNavigation;
   ServerConfig m_serverConfig;
   ComputerSetupModel m_computerSetupModel;
   SettingsDialogButtonBox *m_buttonBox = nullptr;

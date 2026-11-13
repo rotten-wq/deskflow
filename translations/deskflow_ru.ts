@@ -1098,6 +1098,14 @@ Enabling this setting will disable the server config GUI.</source>
         <source>Enable lock to computer at startup</source>
         <translation>Включать привязку к компьютеру при запуске</translation>
     </message>
+    <message>
+        <source>For macOS clients: Home and End, alone or with Shift, are sent as Command+Left and Command+Right, which move to the start and end of the line.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send Home/End as line start/end (Command+Left/Right)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>

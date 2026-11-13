@@ -1100,6 +1100,14 @@ Al habilitar esta opción, se deshabilitará la interfaz gráfica de usuario (GU
         <source>Enable lock to computer at startup</source>
         <translation type="unfinished">Activar el bloqueo del ordenador al iniciar</translation>
     </message>
+    <message>
+        <source>For macOS clients: Home and End, alone or with Shift, are sent as Command+Left and Command+Right, which move to the start and end of the line.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send Home/End as line start/end (Command+Left/Right)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>

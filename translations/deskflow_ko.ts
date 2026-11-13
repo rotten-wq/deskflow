@@ -1100,6 +1100,14 @@ Enabling this setting will disable the server config GUI.</source>
         <source>Enable lock to computer at startup</source>
         <translation>시작 시 컴퓨터 잠금 사용</translation>
     </message>
+    <message>
+        <source>For macOS clients: Home and End, alone or with Shift, are sent as Command+Left and Command+Right, which move to the start and end of the line.</source>
+        <translation>macOS 클라이언트용: Home과 End(Shift 조합 포함)를 Command+← / Command+→로 보내 줄의 처음과 끝으로 이동합니다.</translation>
+    </message>
+    <message>
+        <source>Send Home/End as line start/end (Command+Left/Right)</source>
+        <translation>Home/End를 줄 처음/끝으로 보내기 (Command+←/→)</translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>

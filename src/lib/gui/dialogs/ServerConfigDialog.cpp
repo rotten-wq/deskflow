@@ -19,7 +19,9 @@
 #include "gui/widgets/SettingsDialogButtonBox.h"
 
 #include <QFileDialog>
+#include <QListWidget>
 #include <QMessageBox>
+#include <QSignalBlocker>
 
 using enum ComputerConfig::SwitchCorner;
 
@@ -103,6 +105,18 @@ void ServerConfigDialog::save()
     Settings::setValue(Settings::Computer::Aliases.arg(computerName), computer.aliases());
     Settings::setValue(Settings::Computer::Name.arg(computerName), computerName);
   }
+
+  // the grid is not used with a server config file, so keep the computers it does not show
+  if (ui->groupExternalConfig->isChecked()) {
+    for (const auto &computerName : Settings::knownComputers()) {
+      const auto group = QStringLiteral("computer_%1").arg(computerName);
+      if (!computerName.isEmpty() && !computerNames.contains(group))
+        computerNames.append(group);
+    }
+  }
+
+  for (auto it = m_lineNavigation.cbegin(); it != m_lineNavigation.cend(); ++it)
+    Settings::setValue(Settings::Computer::HomeEndLineNavigation.arg(it.key()), it.value());
   // Write the computer list now too, or it keeps computers whose settings were just removed until the app quits.
   m_serverConfig.commit();
   Settings::removeUnknownComputers(computerNames);
@@ -424,7 +438,55 @@ void ServerConfigDialog::loadFromConfig()
   } else {
     server->markAsServer();
   }
+  loadLineNavigation();
   updateControls();
+}
+
+QStringList ServerConfigDialog::lineNavigationComputers() const
+{
+  QStringList names = Settings::knownComputers();
+  for (const auto &computer : m_computerSetupModel.m_computers) {
+    if (!names.contains(computer.name()))
+      names.append(computer.name());
+  }
+  names.removeAll(m_serverConfig.getServerName());
+  names.removeAll(QString());
+  names.sort(Qt::CaseInsensitive);
+  return names;
+}
+
+void ServerConfigDialog::loadLineNavigation()
+{
+  m_lineNavigation.clear();
+  for (const auto &name : lineNavigationComputers())
+    m_lineNavigation.insert(name, Settings::value(Settings::Computer::HomeEndLineNavigation.arg(name)).toBool());
+  refreshLineNavigation();
+}
+
+void ServerConfigDialog::refreshLineNavigation()
+{
+  const QSignalBlocker blocker(ui->listLineNavigation);
+  ui->listLineNavigation->clear();
+  for (auto it = m_lineNavigation.cbegin(); it != m_lineNavigation.cend(); ++it) {
+    auto *item = new QListWidgetItem(it.key(), ui->listLineNavigation);
+    item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+    item->setCheckState(it.value() ? Qt::Checked : Qt::Unchecked);
+  }
+}
+
+void ServerConfigDialog::lineNavigationItemChanged(QListWidgetItem *item)
+{
+  m_lineNavigation.insert(item->text(), item->checkState() == Qt::Checked);
+  setButtonBoxEnabledButtons();
+}
+
+bool ServerConfigDialog::isLineNavigationModified() const
+{
+  for (auto it = m_lineNavigation.cbegin(); it != m_lineNavigation.cend(); ++it) {
+    if (it.value() != Settings::value(Settings::Computer::HomeEndLineNavigation.arg(it.key())).toBool())
+      return true;
+  }
+  return false;
 }
 
 void ServerConfigDialog::resetFromSettings()
@@ -505,6 +567,7 @@ void ServerConfigDialog::initConnections() const
   connect(ui->btnBrowseConfigFile, &QPushButton::clicked, this, &ServerConfigDialog::browseConfigFile);
   connect(ui->groupExternalConfig, &QGroupBox::toggled, this, &ServerConfigDialog::toggleExternalConfig);
   connect(ui->lineConfigFile, &QLineEdit::textChanged, this, &ServerConfigDialog::setServerConfig);
+  connect(ui->listLineNavigation, &QListWidget::itemChanged, this, &ServerConfigDialog::lineNavigationItemChanged);
 
   connect(
       ui->sbClipboardSizeLimit, QOverload<int>::of(&QSpinBox::valueChanged), this,
@@ -560,6 +623,10 @@ void ServerConfigDialog::restoreFromDefaults()
   ui->groupExternalConfig->setChecked(Settings::defaultValue(Settings::Server::ExternalConfig).toBool());
   ui->lineConfigFile->setText(Settings::defaultValue(Settings::Server::ExternalConfigFile).toString());
 
+  for (auto it = m_lineNavigation.begin(); it != m_lineNavigation.end(); ++it)
+    it.value() = false;
+  refreshLineNavigation();
+
   refreshControls();
   updateControls();
 }
@@ -606,7 +673,8 @@ bool ServerConfigDialog::isGeneralConfigModified() const
          m_relativeMouseMoves != Settings::value(Settings::Server::RelativeMouseMoves).toBool() ||
          m_win32keepForeground != Settings::value(Settings::Server::Win32KeepForeground).toBool() ||
          m_disableLockToComputer != Settings::value(Settings::Server::DisableLockToComputer).toBool() ||
-         m_defaultLockToComputerState != Settings::value(Settings::Server::DefaultLockToComputerState).toBool();
+         m_defaultLockToComputerState != Settings::value(Settings::Server::DefaultLockToComputerState).toBool() ||
+         isLineNavigationModified();
 }
 
 bool ServerConfigDialog::isGeneralConfigDefault() const
@@ -625,7 +693,8 @@ bool ServerConfigDialog::isGeneralConfigDefault() const
          m_relativeMouseMoves == Settings::defaultValue(Settings::Server::RelativeMouseMoves).toBool() &&
          m_win32keepForeground == Settings::defaultValue(Settings::Server::Win32KeepForeground).toBool() &&
          m_disableLockToComputer == Settings::defaultValue(Settings::Server::DisableLockToComputer).toBool() &&
-         m_defaultLockToComputerState == Settings::defaultValue(Settings::Server::DefaultLockToComputerState).toBool();
+         m_defaultLockToComputerState == Settings::defaultValue(Settings::Server::DefaultLockToComputerState).toBool() &&
+         !m_lineNavigation.values().contains(true);
 }
 
 void ServerConfigDialog::setButtonBoxEnabledButtons() const
